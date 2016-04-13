@@ -128,7 +128,7 @@ module.exports = generators.Base.extend({
     );
 
     // Add backend
-    mkdirp('code/backend');
+    this.spawnCommandSync('git', ['clone', 'https://github.com/iRomain/api-bootstrap.git', 'code/backend']);
 
     // Add frontend(s)
     if(this.includeWeb) {
