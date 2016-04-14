@@ -2,8 +2,11 @@ var generators = require('yeoman-generator');
 var yosay = require('yosay');
 var _ = require('lodash');
 var mkdirp = require('mkdirp');
+var optionOrPrompt = require('yeoman-option-or-prompt');
 
 module.exports = generators.Base.extend({
+
+  _optionOrPrompt: optionOrPrompt,
 
   constructor: function () {
     
@@ -34,67 +37,65 @@ module.exports = generators.Base.extend({
       this.log(yosay('Welcome to the business generator!'));
     }
 
-    var prompts = [{
+    // Ask general questions
+    var generalPrompts = [{
       type    : 'input',
       name    : 'businessName',
       message : 'Your Business Name',
-      default : _.startCase(this.appname) // Default to current folder name
+      default : _.startCase(this.appname)
     }, {
       type    : 'input',
       name    : 'ownerName',
       message : 'Your Name',
       store   : true
     }, {
-      type: 'checkbox',
-      name: 'frontends',
-      message: 'Which frontend(s) would you like to build?',
-      choices: [{
-          name: 'Web',
-          value: 'includeWeb',
-          checked: true
-        }, {
-          name: 'Android',
-          value: 'includeAndroid',
-          checked: false
-        }, {
-          name: 'iOS',
-          value: 'includeIOS',
-          checked: false
-        }, {
-          name: 'Mac',
-          value: 'includeMac',
-          checked: false
-        }, {
-          name: 'Linux',
-          value: 'includeLinux',
-          checked: false
-        }, {
-          name: 'Windows',
-          value: 'includeWindows',
-          checked: false
-        }]
+      type    : 'input',
+      name    : 'ownerEmail',
+      message : 'Your Email',
+      store   : true
+    }, {
+      type    : 'input',
+      name    : 'domainName',
+      message : 'Your business domain name:',
+      default : _.kebabCase(this.appname) + '.com'
+    }, {
+      type: 'confirm',
+      name: 'generateEngine',
+      message: 'Do you wish to bootstrap some code?',
+      default: true
+    }, {
+      type: 'confirm',
+      name: 'generateDesign',
+      message: 'Do you wish to bootstrap some design?',
+      default: false
+    }, {
+      type: 'confirm',
+      name: 'generateMarketing',
+      message: 'Do you wish to bootstrap some marketing?',
+      default: false
+    }, {
+      type: 'confirm',
+      name: 'generateSEO',
+      message: 'Do you wish to generate some SEO?',
+      default: false
     }];
 
-    this.prompt(prompts, function (answers) {
-      var frontends = answers.frontends;
+    // Prompt general questions
+    this._optionOrPrompt(generalPrompts, function (answers) {
 
-      function hasFrontend(front) {
-        return frontends && frontends.indexOf(front) !== -1;
-      };
+      this.answers = answers;
 
-      // manually deal with the response, get back and store the results.
-      // we change a bit this way of doing to automatically do this in the self.prompt() method.
       this.businessName = answers.businessName;
       this.ownerName = answers.ownerName;
-      this.includeWeb = hasFrontend('includeWeb');
-      this.includeAndroid = hasFrontend('includeAndroid');
-      this.includeIOS = hasFrontend('includeIOS');
-      this.includeMac = hasFrontend('includeMac');
-      this.includeLinux = hasFrontend('includeLinux');
-      this.includeWindows = hasFrontend('includeWindows');
+      this.ownerEmail = answers.ownerEmail;
+      this.generateEngine = answers.generateEngine;
+      this.generateDesign = answers.generateDesign;
+      this.generateMarketing = answers.generateMarketing;
+      this.generateSEO = answers.generateSEO;
 
       done();
     }.bind(this));
+
   },
 
 
@@ -102,6 +103,14 @@ module.exports = generators.Base.extend({
 
   configuring: function () {
     this.log('configuring is running');
+
+    /*
+    this.composeWith(this.options['test-framework'] + ':app', {
+      options: {
+        'skip-install': this.options['skip-install']
+      }
+    }
+    */
   },
 
 
@@ -117,6 +126,16 @@ module.exports = generators.Base.extend({
   writing: function () {
     this.log('writing is running');
 
+    if(this.generateEngine){
+      this.composeWith('engine', { options: this.answers });
+    }
+
+    if(this.generateDesign){
+      this.composeWith('design', { options: this.answers });
+    }
+
+
+
     // Init ReadMe file
     this.fs.copyTpl(
       this.templatePath('README.md'),
@@ -126,36 +145,6 @@ module.exports = generators.Base.extend({
         ownerName: this.ownerName
       }
     );
-
-    // Add backend
-    this.spawnCommandSync('git', ['clone', 'https://github.com/iRomain/api-bootstrap.git', 'code/backend']);
-
-    // Add frontend(s)
-    if(this.includeWeb) {
-      mkdirp('code/web');
-    }
-
-    if(this.includeAndroid) {
-      mkdirp('code/android');
-    }
-
-    if(this.includeIOS) {
-      mkdirp('code/ios');
-    }
-
-    if(this.includeMac) {
-      mkdirp('code/mac');
-    }
-
-    if(this.includeLinux) {
-      mkdirp('code/linux');
-    }
-
-    if(this.includeWindows) {
-      mkdirp('code/windows');
-    }
-
-    //this.directory('code/android', 'code/android');
 
   },
 
@@ -195,7 +184,7 @@ module.exports = generators.Base.extend({
   method1: function () {
     this.log('method 1 just ran');
   },
-  method2: function () {
+  _method2: function () {
     this.log('method 2 just ran');
   }
 
