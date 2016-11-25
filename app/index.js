@@ -34,7 +34,7 @@ module.exports = generators.Base.extend({
     var done = this.async();
 
     if (!this.options['skip-welcome-message']) {
-      this.log(yosay('Welcome to the business generator!'));
+      this.log(yosay('\'Allo \'Allo Welcome to the business generator!'));
     }
 
     // Ask general questions
@@ -47,6 +47,7 @@ module.exports = generators.Base.extend({
       type    : 'input',
       name    : 'ownerName',
       message : 'Your Name',
+      description : 'Your Name',
       store   : true
     }, {
       type    : 'input',
@@ -82,17 +83,9 @@ module.exports = generators.Base.extend({
 
     // Prompt general questions
     this._optionOrPrompt(generalPrompts, function (answers) {
-
+      
       this.answers = answers;
-
-      this.businessName = answers.businessName;
-      this.ownerName = answers.ownerName;
-      this.ownerEmail = answers.ownerEmail;
-      this.generateEngine = answers.generateEngine;
-      this.generateDesign = answers.generateDesign;
-      this.generateMarketing = answers.generateMarketing;
-      this.generateSEO = answers.generateSEO;
-
+      
       done();
     }.bind(this));
 
@@ -126,11 +119,12 @@ module.exports = generators.Base.extend({
   writing: function () {
     this.log('writing is running');
 
-    if(this.generateEngine){
+    if(this.answers.generateEngine){
+      mkdirp('code');
       this.composeWith('engine', { options: this.answers });
     }
 
-    if(this.generateDesign){
+    if(this.answers.generateDesign){
       this.composeWith('design', { options: this.answers });
     }
 
@@ -140,9 +134,9 @@ module.exports = generators.Base.extend({
     this.fs.copyTpl(
       this.templatePath('README.md'),
       this.destinationPath('README.md'),
-      { businessName: this.businessName,
+      { businessName: this.answers.businessName,
         dateCreated: this.dateCreated,
-        ownerName: this.ownerName
+        ownerName: this.answers.ownerName
       }
     );
 
